@@ -8,7 +8,7 @@ import (
 	kubewarden_testing "github.com/kubewarden/policy-sdk-go/testing"
 )
 
-func TestEmptySettingsLeadsToApproval(t *testing.T) {
+func TestEmptySettingsLeadsToRequestAccepted(t *testing.T) {
 	settings := Settings{}
 
 	payload, err := kubewarden_testing.BuildValidationRequest(
@@ -33,7 +33,7 @@ func TestEmptySettingsLeadsToApproval(t *testing.T) {
 	}
 }
 
-func TestApproval(t *testing.T) {
+func TestRequestAccepted(t *testing.T) {
 	constrainedLabels := make(map[string]*RegularExpression)
 	re, err := CompileRegularExpression(`^world-`)
 	if err != nil {
@@ -68,7 +68,7 @@ func TestApproval(t *testing.T) {
 	}
 }
 
-func TestApprovalWithConstraintLabel(t *testing.T) {
+func TestAcceptRequestWithConstraintLabel(t *testing.T) {
 	constrainedLabels := make(map[string]*RegularExpression)
 	re, err := CompileRegularExpression(`^team-`)
 	if err != nil {
@@ -133,7 +133,7 @@ func TestRejectionBecauseDeniedLabel(t *testing.T) {
 	}
 
 	if response.Accepted != false {
-		t.Error("Unexpected approval")
+		t.Error("Unexpected accept response")
 	}
 
 	expected_message := "Label owner is on the deny list"
@@ -173,7 +173,7 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 	}
 
 	if response.Accepted != false {
-		t.Error("Unexpected approval")
+		t.Error("Unexpected accept response")
 	}
 
 	expected_message := "The value of cc-center doesn't pass user-defined constraint"

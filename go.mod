@@ -1,4 +1,4 @@
-module github.com/kubewarden/ingress-policy
+module github.com/kubewarden/safe-labels-policy
 
 go 1.15
 
