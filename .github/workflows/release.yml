@@ -45,7 +45,7 @@ jobs:
       - name: Build Wasm module
         uses: docker://tinygo/tinygo-dev:latest
         with:
-          args: tinygo build -o ${WASM_BINARY_NAME} -target=wasi -no-debug .
+          args: tinygo build -o ${{ env.WASM_BINARY_NAME }} -target=wasi -no-debug .
 
       -
         name: Login to GitHub Container Registry
