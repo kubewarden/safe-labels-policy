@@ -12,9 +12,8 @@ jobs:
     name: Create new release with Wasm artifact
     runs-on: ubuntu-latest
     env:
-      # TODO: change these variables to match your preferences
       WASM_BINARY_NAME: policy.wasm
-      OCI_TARGET: ghcr.io/kubewarden/policies/demo-policy
+      OCI_TARGET: ghcr.io/kubewarden/policies/safe-labels
     steps:
       -
         name: Checkout code
