@@ -8,7 +8,11 @@
     "apiVersion": "networking.k8s.io/v1",
     "kind": "Ingress",
     "metadata": {
-      "name": "tls-example-ingress"
+      "name": "tls-example-ingress",
+      "labels": {
+        "cc-center": "cc-1234a",
+        "owner": "team-infra"
+      }
     },
     "spec": {
       "tls": [
