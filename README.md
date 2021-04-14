@@ -25,7 +25,7 @@ denied_labels:
 # being rejected
 constrained_labels:
   priority: "[123]"
-  cost-center: "^cc-\d+$"
+  cost-center: "^cc-\\d+$"
 ```
 
 > **Note well:** the regular expression must be espressed
