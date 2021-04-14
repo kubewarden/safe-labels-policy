@@ -23,17 +23,33 @@ func validate(payload []byte) ([]byte, error) {
 
 	data := gjson.GetBytes(
 		payload,
-		"request.object.metadata.name")
+		"request.object.metadata.labels")
 
-	if !data.Exists() {
-		return kubewarden.AcceptRequest()
-	}
-	name := data.String()
+	data.ForEach(func(key, value gjson.Result) bool {
+		label := key.String()
 
-	if settings.DeniedNames.Contains(name) {
+		if settings.DeniedLabels.Contains(label) {
+			err = fmt.Errorf("Label %s is on the deny list", label)
+			// stop iterating over labels
+			return false
+		}
+
+		regExp, found := settings.ConstrainedLabels[label]
+		if found {
+			// This is a constrained label
+			if !regExp.Match([]byte(value.String())) {
+				err = fmt.Errorf("The value of %s doesn't pass user-defined constraint", label)
+				// stop iterating over labels
+				return false
+			}
+		}
+
+		return true
+	})
+
+	if err != nil {
 		return kubewarden.RejectRequest(
-			kubewarden.Message(
-				fmt.Sprintf("The '%s' name is on the deny list", name)),
+			kubewarden.Message(err.Error()),
 			kubewarden.NoCode)
 	}
 
