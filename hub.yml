@@ -10,5 +10,5 @@ download:
 keywords:
   - Labels
 resources:
-  - *
+  - '*'
 mutation: false
