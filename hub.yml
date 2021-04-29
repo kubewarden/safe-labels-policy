@@ -1,4 +1,4 @@
-name: safe-lables
+name: safe-labels
 description: A policy that validates Kubernetes' resource labels
 homepage: https://github.com/kubewarden/safe-labels-policy
 author:
