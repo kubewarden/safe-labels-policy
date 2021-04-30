@@ -11,8 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     if: >
-      ${{ github.event.workflow_run.event != 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success' }}
+      ${{ github.event.workflow_run.conclusion == 'success' }}
+      #${{ github.event.workflow_run.event != 'pull_request' &&
+      #github.event.workflow_run.conclusion == 'success' }}
 
     env:
       WASM_BINARY_NAME: policy.wasm
@@ -28,6 +29,9 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{github.event.workflow_run.id }},
             });
+            var console = require('console');
+            console.debug('hello');
+            console.debug(artifacts);
             var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
               return artifact.name == "${{ env.WASM_BINARY_NAME }}"
             })[0];
