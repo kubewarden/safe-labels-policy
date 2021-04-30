@@ -22,7 +22,7 @@ jobs:
           file: policy-testdrive-linux-amd64
 
       - name: build policy
-        uses: docker://tinygo/tinygo-dev:latest
+        uses: docker://ghcr.io/kubewarden/tinygo/tinygo-dev:w14-2021
         with:
           args: tinygo build -o policy.wasm -target=wasi -no-debug .
 
