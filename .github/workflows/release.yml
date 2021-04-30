@@ -43,7 +43,7 @@ jobs:
       #    tinygo build -o ingress-policy.wasm -target=wasi -no-debug .
 
       - name: Build Wasm module
-        uses: docker://tinygo/tinygo-dev:latest
+        uses: docker://ghcr.io/kubewarden/tinygo/tinygo-dev:w14-2021
         with:
           args: tinygo build -o ${{ env.WASM_BINARY_NAME }} -target=wasi -no-debug .
 
