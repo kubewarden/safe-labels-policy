@@ -9,9 +9,6 @@ on:
   pull_request: {}
 
 jobs:
-  env:
-    KWCTL_VERSION: v0.1.5
-
   unit-tests:
     runs-on: ubuntu-latest
     steps:
@@ -30,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       WASM_BINARY_NAME: policy.wasm
+      KWCTL_VERSION: v0.1.5
     steps:
       #############################
       # Preparing the environment
@@ -99,6 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       OCI_TARGET: ghcr.io/kubewarden/policies/safe-labels
+      KWCTL_VERSION: v0.1.5
 
     steps:
       - name: Download artifact
