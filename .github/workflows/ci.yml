@@ -28,6 +28,7 @@ jobs:
     env:
       WASM_BINARY_NAME: policy.wasm
       KWCTL_VERSION: v0.1.5
+      TINYGO_VERSION: 0.18.0
     steps:
       #############################
       # Preparing the environment
@@ -49,21 +50,15 @@ jobs:
       # Building the Wasm module
       #############################
 
-      # TODO: uncomment once tinygo 0.18.0 is released
-      #-
-      #  name: Install tinygo
-      #  run: |
-      #    wget https://github.com/tinygo-org/tinygo/releases/download/v0.17.0/tinygo_0.17.0_amd64.deb
-      #    sudo dpkg -i tinygo_0.17.0_amd64.deb
-      #-
-      #  name: Build Wasm module
-      #  run: |
-      #    tinygo build -o ingress-policy.wasm -target=wasi -no-debug .
-      - name: build policy
-        uses: docker://ghcr.io/kubewarden/tinygo/tinygo-dev:w14-2021
-        with:
-          args: tinygo build -o ${{ env.WASM_BINARY_NAME }} -target=wasi -no-debug .
-
+      -
+        name: Install tinygo
+        run: |
+          wget https://github.com/tinygo-org/tinygo/releases/download/v${{ env.TINYGO_VERSION }}/tinygo_${{ env.TINYGO_VERSION }}_amd64.deb
+          sudo dpkg -i tinygo_${{ env.TINYGO_VERSION}}_amd64.deb
+      -
+        name: Build Wasm module
+        run: |
+          tinygo build -o ${{ env.WASM_BINARY_NAME }} -target=wasi -no-debug .
 
       #############################
       # Annotate policy
