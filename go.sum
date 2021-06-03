@@ -10,6 +10,8 @@ github.com/kubewarden/policy-sdk-go v0.0.4 h1:o+jTdwn0pfnn138Utl0qQJ83jQmsMZThOB
 github.com/kubewarden/policy-sdk-go v0.0.4/go.mod h1:gRwvddR/wKCTvZNCzSF0NBEsCD0/WZJe4daVzvkDwAc=
 github.com/kubewarden/policy-sdk-go v0.0.5 h1:xViS2gHZdI3OQyN8jnOqTQxCn1pTvseAXBKSJKljuQo=
 github.com/kubewarden/policy-sdk-go v0.0.5/go.mod h1:gRwvddR/wKCTvZNCzSF0NBEsCD0/WZJe4daVzvkDwAc=
+github.com/kubewarden/policy-sdk-go v0.1.0 h1:eOLEQ3A0s1Pvd37gP+mdQTTZXzmYS1NthwRIiql4bXg=
+github.com/kubewarden/policy-sdk-go v0.1.0/go.mod h1:gRwvddR/wKCTvZNCzSF0NBEsCD0/WZJe4daVzvkDwAc=
 github.com/tidwall/match v1.0.3 h1:FQUVvBImDutD8wJLN6c5eMzWtjgONK9MwIBCOrUJKeE=
 github.com/tidwall/match v1.0.3/go.mod h1:eRSPERbgtNPcGhD8UCthc6PmLEQXEWd3PRB5JTxsfmM=
 github.com/tidwall/pretty v1.0.2 h1:Z7S3cePv9Jwm1KwS0513MRaoUe3S01WPbLNV40pwWZU=
