@@ -12,3 +12,4 @@ keywords:
 resources:
   - '*'
 mutation: false
+context-aware: false
