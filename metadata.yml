@@ -4,6 +4,7 @@ rules:
   resources: ["*"]
   operations: ["CREATE", "UPDATE"]
 mutating: false
+contextAware: false
 annotations:
   io.kubewarden.policy.author: Flavio Castelli
   io.kubewarden.policy.url: https://github.com/kubewarden/safe-labels-policy
