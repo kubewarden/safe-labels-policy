@@ -3,11 +3,19 @@ package main
 import (
 	"fmt"
 
+	"github.com/francoispqt/onelog"
 	"github.com/kubewarden/gjson"
 	kubewarden "github.com/kubewarden/policy-sdk-go"
 )
 
 func validate(payload []byte) ([]byte, error) {
+	kl := kubewarden.KubewardenLogWriter{}
+	logger := onelog.New(
+		&kl,
+		onelog.ALL, // shortcut for onelog.DEBUG|onelog.INFO|onelog.WARN|onelog.ERROR|onelog.FATAL,
+	)
+	logger.Info("info message from tinygo")
+
 	if !gjson.ValidBytes(payload) {
 		return kubewarden.RejectRequest(
 			kubewarden.Message("Not a valid JSON document"),

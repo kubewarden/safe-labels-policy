@@ -1,5 +1,10 @@
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/deckarep/golang-set v1.7.1 h1:SCQV0S6gTtp6itiFrTqI+pfmJ4LN85S1YzhDf9rTHJQ=
 github.com/deckarep/golang-set v1.7.1/go.mod h1:93vsz/8Wt4joVM7c2AVqh+YRMiUSc14yDtF28KmMOgQ=
+github.com/francoispqt/gojay v0.0.0-20181220093123-f2cc13a668ca h1:F2BD6Vhei4w0rtm4eNpzylNsB07CcCbpYA+xlqMx3mA=
+github.com/francoispqt/gojay v0.0.0-20181220093123-f2cc13a668ca/go.mod h1:H8Wgri1Asi1VevY3ySdpIK5+KCpqzToVswNq8g2xZj4=
+github.com/francoispqt/onelog v0.0.0-20190306043706-8c2bb31b10a4 h1:N9eG+1y9e3tnNPXKjssLMa8MumIBDWWoJQWM7htGWUc=
+github.com/francoispqt/onelog v0.0.0-20190306043706-8c2bb31b10a4/go.mod h1:v1Il1fkBpjiYPpEJcGxqgrPUPcHuTC7eHh9zBV3CLBE=
 github.com/kubewarden/gjson v1.7.2 h1:+cLRfPqyvjwrkgE68cGdNfUy1Z6L45DjvuFH9/ofwQ0=
 github.com/kubewarden/gjson v1.7.2/go.mod h1:jSlxpubGqBG5HHe4v8kwcc8z1JF2reJ7AJAUojw66AY=
 github.com/kubewarden/policy-sdk-go v0.0.2 h1:H39qPQvsbTXq+hgeRha8h+YgYduSZyfDPyaVIyujrtY=
@@ -16,6 +21,10 @@ github.com/kubewarden/policy-sdk-go v0.1.1-0.20210603144316-bee01d2a0ddb h1:fos+
 github.com/kubewarden/policy-sdk-go v0.1.1-0.20210603144316-bee01d2a0ddb/go.mod h1:al4TDTgzhRB1jTyjLuWibPLChvMJkLmn0rKTAlL90pU=
 github.com/kubewarden/policy-sdk-go v0.1.1 h1:s9tiiIPeFk1BO25Em8pG2UqmphVZgAOb4O1T4prC1lk=
 github.com/kubewarden/policy-sdk-go v0.1.1/go.mod h1:al4TDTgzhRB1jTyjLuWibPLChvMJkLmn0rKTAlL90pU=
+github.com/kubewarden/policy-sdk-go v0.1.2-0.20210627192854-19c72ddf47a1 h1:1ovvHU2Fc3DEvCLA8UCxjY4CykYPTJGQliej5hLBIj0=
+github.com/kubewarden/policy-sdk-go v0.1.2-0.20210627192854-19c72ddf47a1/go.mod h1:al4TDTgzhRB1jTyjLuWibPLChvMJkLmn0rKTAlL90pU=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/tidwall/match v1.0.3 h1:FQUVvBImDutD8wJLN6c5eMzWtjgONK9MwIBCOrUJKeE=
 github.com/tidwall/match v1.0.3/go.mod h1:eRSPERbgtNPcGhD8UCthc6PmLEQXEWd3PRB5JTxsfmM=
 github.com/tidwall/pretty v1.0.2 h1:Z7S3cePv9Jwm1KwS0513MRaoUe3S01WPbLNV40pwWZU=
