@@ -7,10 +7,13 @@
 This policy validates the labels of generic Kubernetes objects.
 
 The policy rejects all the resources that use one or more labels on the
-deny list. The deny list is provided by at runtime via the policy configuration.
+deny list. The deny list is provided at runtime via the policy configuration.
 
 The policy allows users to put constraints on specific labels. The constraints
 are expressed as regular expression and are provided via the policy settings.
+
+The policy allows users to require specific labels to be part of the resource.
+The list of mandatory labels is provided at runtime via the policy configuration.
 
 The policy settings look like that:
 
@@ -19,6 +22,10 @@ The policy settings look like that:
 denied_labels:
 - foo
 - bar
+
+# List of labels that must be defined
+mandatory_labels:
+- cost-center
 
 # Labels that are validate with user-defined RegExp
 # Failing to comply with the RegExp resuls in the object
@@ -69,16 +76,6 @@ spec:
             name: test
             port:
               number: 80
-```
-
-Policy's settings can also be used to force certain labels to be specified,
-regardless of their contents:
-
-```yaml
-# Policy's settings
-
-constrained_labels:
-  mandatory-label: ".*" # <- this label must be present, we don't care about its value
 ```
 
 # Obtain policy

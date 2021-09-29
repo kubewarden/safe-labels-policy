@@ -9,7 +9,11 @@ import (
 )
 
 func TestEmptySettingsLeadsToRequestAccepted(t *testing.T) {
-	settings := Settings{}
+	settings := Settings{
+		DeniedLabels:      mapset.NewThreadUnsafeSet(),
+		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
+		ConstrainedLabels: make(map[string]*RegularExpression),
+	}
 
 	payload, err := kubewarden_testing.BuildValidationRequest(
 		"test_data/ingress.json",
@@ -43,6 +47,7 @@ func TestRequestAccepted(t *testing.T) {
 
 	settings := Settings{
 		DeniedLabels:      mapset.NewThreadUnsafeSetFromSlice([]interface{}{"bad1", "bad2"}),
+		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
 		ConstrainedLabels: constrainedLabels,
 	}
 
@@ -77,6 +82,7 @@ func TestAcceptRequestWithConstraintLabel(t *testing.T) {
 	constrainedLabels["owner"] = re
 	settings := Settings{
 		DeniedLabels:      mapset.NewThreadUnsafeSetFromSlice([]interface{}{"bad1", "bad2"}),
+		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
 		ConstrainedLabels: constrainedLabels,
 	}
 
@@ -112,6 +118,7 @@ func TestRejectionBecauseDeniedLabel(t *testing.T) {
 
 	settings := Settings{
 		DeniedLabels:      mapset.NewThreadUnsafeSetFromSlice([]interface{}{"owner"}),
+		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
 		ConstrainedLabels: constrainedLabels,
 	}
 
@@ -136,7 +143,7 @@ func TestRejectionBecauseDeniedLabel(t *testing.T) {
 		t.Error("Unexpected accept response")
 	}
 
-	expected_message := "Label owner is on the deny list"
+	expected_message := "The following labels are denied: owner"
 	if response.Message != expected_message {
 		t.Errorf("Got '%s' instead of '%s'", response.Message, expected_message)
 	}
@@ -151,7 +158,8 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 	constrainedLabels["cc-center"] = re
 
 	settings := Settings{
-		DeniedLabels:      mapset.NewThreadUnsafeSetFromSlice([]interface{}{}),
+		DeniedLabels:      mapset.NewThreadUnsafeSet(),
+		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
 		ConstrainedLabels: constrainedLabels,
 	}
 
@@ -176,7 +184,41 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 		t.Error("Unexpected accept response")
 	}
 
-	expected_message := "The value of cc-center doesn't pass user-defined constraint"
+	expected_message := "The following labels are violating user constraints: cc-center"
+	if response.Message != expected_message {
+		t.Errorf("Got '%s' instead of '%s'", response.Message, expected_message)
+	}
+}
+
+func TestRejectionBecauseConstrainedLabelMissing(t *testing.T) {
+	settings := Settings{
+		DeniedLabels:      mapset.NewThreadUnsafeSet(),
+		MandatoryLabels:   mapset.NewThreadUnsafeSetFromSlice([]interface{}{"required"}),
+		ConstrainedLabels: make(map[string]*RegularExpression),
+	}
+
+	payload, err := kubewarden_testing.BuildValidationRequest(
+		"test_data/ingress.json",
+		&settings)
+	if err != nil {
+		t.Errorf("Unexpected error: %+v", err)
+	}
+
+	responsePayload, err := validate(payload)
+	if err != nil {
+		t.Errorf("Unexpected error: %+v", err)
+	}
+
+	var response kubewarden_testing.ValidationResponse
+	if err := json.Unmarshal(responsePayload, &response); err != nil {
+		t.Errorf("Unexpected error: %+v", err)
+	}
+
+	if response.Accepted != false {
+		t.Error("Unexpected accept response")
+	}
+
+	expected_message := "The following mandatory labels are missing: required"
 	if response.Message != expected_message {
 		t.Errorf("Got '%s' instead of '%s'", response.Message, expected_message)
 	}
