@@ -1,10 +1,15 @@
 # github.com/deckarep/golang-set v1.7.1
 ## explicit
 github.com/deckarep/golang-set
+# github.com/francoispqt/gojay v0.0.0-20181220093123-f2cc13a668ca
+github.com/francoispqt/gojay
+# github.com/francoispqt/onelog v0.0.0-20190306043706-8c2bb31b10a4
+## explicit
+github.com/francoispqt/onelog
 # github.com/kubewarden/gjson v1.7.2
 ## explicit
 github.com/kubewarden/gjson
-# github.com/kubewarden/policy-sdk-go v0.1.1
+# github.com/kubewarden/policy-sdk-go v0.1.2
 ## explicit
 github.com/kubewarden/policy-sdk-go
 github.com/kubewarden/policy-sdk-go/constants
