@@ -45,7 +45,7 @@
   # request rejected
   [ "$status" -eq 0 ]
   [ $(expr "$output" : '.*allowed.*false') -ne 0 ]
-  [ $(expr "$output" : '.*Label owner is on the deny list.*') -ne 0 ]
+  [ $(expr "$output" : '.*The following labels are denied: owner".*') -ne 0 ]
 }
 
 @test "reject because label doesn't pass validation constraint" {
@@ -59,10 +59,23 @@
   # request rejected
   [ "$status" -eq 0 ]
   [ $(expr "$output" : '.*allowed.*false') -ne 0 ]
-  [ $(expr "$output" : ".*The value of cc-center doesn't pass user-defined constraint.*") -ne 0 ]
+  [ $(expr "$output" : ".*The following labels are violating user constraints: cc-center.*") -ne 0 ]
 }
 
-@test "fail settings validation because of conflicting labels" {
+@test "reject because a required label does not exist" {
+  run kwctl run policy.wasm \
+    -r test_data/ingress.json --settings-json '{"mandatory_labels": ["required"], "constrained_labels": {"foo", ".*"}}'
+
+  # this prints the output when one the checks below fails
+  echo "output = ${output}"
+
+  # request rejected
+  [ "$status" -eq 0 ]
+  [ $(expr "$output" : '.*allowed.*false') -ne 0 ]
+  [ $(expr "$output" : '.*The following mandatory labels are missing: required.*') -ne 0 ]
+}
+
+@test "fail settings validation because constrained labels are also denied" {
   run kwctl run policy.wasm \
     -r test_data/ingress.json \
     --settings-json '{"denied_labels": ["foo", "cc-center"], "constrained_labels": {"cc-center": "^cc-\\d+$"}}'
@@ -73,7 +86,21 @@
   # settings validation fails
   [ "$status" -eq 1 ]
   [ $(expr "$output" : '.*valid.*false') -ne 0 ]
-  [ $(expr "$output" : ".*Provided settings are not valid: These labels cannot be constrained and denied at the same time: Set{cc-center}.*") -ne 0 ]
+  [ $(expr "$output" : ".*Provided settings are not valid: These labels cannot be constrained and denied at the same time: cc-center.*") -ne 0 ]
+}
+
+@test "fail settings validation because mandatory labels are also denied" {
+  run kwctl run policy.wasm \
+    -r test_data/ingress.json \
+    --settings-json '{"denied_labels": ["foo", "cc-center"], "mandatory_labels": ["cc-center"]}'
+
+  # this prints the output when one the checks below fails
+  echo "output = ${output}"
+
+  # settings validation fails
+  [ "$status" -eq 1 ]
+  [ $(expr "$output" : '.*valid.*false') -ne 0 ]
+  [ $(expr "$output" : ".*Provided settings are not valid: These labels cannot be mandatory and denied at the same time: cc-center.*") -ne 0 ]
 }
 
 @test "fail settings validation because of invalid constraint" {

@@ -7,6 +7,7 @@ import (
 
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 // A wrapper around the standard regexp.Regexp struct
@@ -47,6 +48,7 @@ func (r *RegularExpression) MarshalText() ([]byte, error) {
 
 type Settings struct {
 	DeniedLabels      mapset.Set                    `json:"denied_labels"`
+	MandatoryLabels   mapset.Set                    `json:"mandatory_labels"`
 	ConstrainedLabels map[string]*RegularExpression `json:"constrained_labels"`
 }
 
@@ -56,6 +58,7 @@ type Settings struct {
 //    "request": ...,
 //    "settings": {
 //       "denied_labels": [...],
+//       "mandatory_labels": [...],
 //       "constrained_labels": { ... }
 //    }
 // }
@@ -66,6 +69,7 @@ func NewSettingsFromValidationReq(payload []byte) (Settings, error) {
 	return newSettings(
 		payload,
 		"settings.denied_labels",
+		"settings.mandatory_labels",
 		"settings.constrained_labels")
 }
 
@@ -83,11 +87,12 @@ func NewSettingsFromValidateSettingsPayload(payload []byte) (Settings, error) {
 	return newSettings(
 		payload,
 		"denied_labels",
+		"mandatory_labels",
 		"constrained_labels")
 }
 
 func newSettings(payload []byte, paths ...string) (Settings, error) {
-	if len(paths) != 2 {
+	if len(paths) != 3 {
 		return Settings{}, fmt.Errorf("wrong number of json paths")
 	}
 
@@ -99,9 +104,15 @@ func newSettings(payload []byte, paths ...string) (Settings, error) {
 		return true
 	})
 
+	mandatoryLabels := mapset.NewThreadUnsafeSet()
+	data[1].ForEach(func(_, entry gjson.Result) bool {
+		mandatoryLabels.Add(entry.String())
+		return true
+	})
+
 	constrainedLabels := make(map[string]*RegularExpression)
 	var err error
-	data[1].ForEach(func(key, value gjson.Result) bool {
+	data[2].ForEach(func(key, value gjson.Result) bool {
 		var regExp *RegularExpression
 		regExp, err = CompileRegularExpression(value.String())
 		if err != nil {
@@ -117,6 +128,7 @@ func newSettings(payload []byte, paths ...string) (Settings, error) {
 
 	return Settings{
 		DeniedLabels:      deniedLabels,
+		MandatoryLabels:   mandatoryLabels,
 		ConstrainedLabels: constrainedLabels,
 	}, nil
 }
@@ -128,12 +140,41 @@ func (s *Settings) Valid() (bool, error) {
 		constrainedLabels.Add(label)
 	}
 
+	errors := []string{}
+
 	constrainedAndDenied := constrainedLabels.Intersect(s.DeniedLabels)
 	if constrainedAndDenied.Cardinality() != 0 {
-		return false,
-			fmt.Errorf("These labels cannot be constrained and denied at the same time: %v", constrainedAndDenied)
+		violations := []string{}
+		for _, v := range constrainedAndDenied.ToSlice() {
+			violations = append(violations, v.(string))
+		}
+		errors = append(
+			errors,
+			fmt.Sprintf(
+				"These labels cannot be constrained and denied at the same time: %s",
+				strings.Join(violations, ","),
+			),
+		)
 	}
 
+	mandatoryAndDenied := s.MandatoryLabels.Intersect(s.DeniedLabels)
+	if mandatoryAndDenied.Cardinality() != 0 {
+		violations := []string{}
+		for _, v := range mandatoryAndDenied.ToSlice() {
+			violations = append(violations, v.(string))
+		}
+		errors = append(
+			errors,
+			fmt.Sprintf(
+				"These labels cannot be mandatory and denied at the same time: %s",
+				strings.Join(violations, ","),
+			),
+		)
+	}
+
+	if len(errors) > 0 {
+		return false, fmt.Errorf("%s", strings.Join(errors, "; "))
+	}
 	return true, nil
 }
 
