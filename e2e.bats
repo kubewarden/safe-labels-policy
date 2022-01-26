@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 @test "accept when no settings are provided" {
-  run kwctl run policy.wasm -r test_data/ingress.json
+  run kwctl run annotated-policy.wasm -r test_data/ingress.json
 
   # this prints the output when one the checks below fails
   echo "output = ${output}"
@@ -12,7 +12,7 @@
 }
 
 @test "accept user defined constraint is respected" {
-  run kwctl run policy.wasm \
+  run kwctl run annotated-policy.wasm \
     -r test_data/ingress.json \
     --settings-json '{"constrained_labels": {"owner": "^team-"}}'
   # this prints the output when one the checks below fails
@@ -24,7 +24,7 @@
 }
 
 @test "accept labels are not on deny list" {
-  run kwctl run  policy.wasm \
+  run kwctl run  annotated-policy.wasm \
     -r test_data/ingress.json \
     --settings-json '{"denied_labels": ["foo", "bar"]}'
   # this prints the output when one the checks below fails
@@ -36,7 +36,7 @@
 }
 
 @test "reject because label is on deny list" {
-  run kwctl run policy.wasm \
+  run kwctl run annotated-policy.wasm \
     -r test_data/ingress.json --settings-json '{"denied_labels": ["foo", "owner"]}'
 
   # this prints the output when one the checks below fails
@@ -49,7 +49,7 @@
 }
 
 @test "reject because label doesn't pass validation constraint" {
-  run kwctl run policy.wasm \
+  run kwctl run annotated-policy.wasm \
     -r test_data/ingress.json \
     --settings-json '{"constrained_labels": {"cc-center": "^cc-\\d+$"}}'
 
@@ -63,7 +63,7 @@
 }
 
 @test "reject because a required label does not exist" {
-  run kwctl run policy.wasm \
+  run kwctl run annotated-policy.wasm \
     -r test_data/ingress.json --settings-json '{"mandatory_labels": ["required"], "constrained_labels": {"foo", ".*"}}'
 
   # this prints the output when one the checks below fails
@@ -76,7 +76,7 @@
 }
 
 @test "fail settings validation because constrained labels are also denied" {
-  run kwctl run policy.wasm \
+  run kwctl run annotated-policy.wasm \
     -r test_data/ingress.json \
     --settings-json '{"denied_labels": ["foo", "cc-center"], "constrained_labels": {"cc-center": "^cc-\\d+$"}}'
 
@@ -90,7 +90,7 @@
 }
 
 @test "fail settings validation because mandatory labels are also denied" {
-  run kwctl run policy.wasm \
+  run kwctl run annotated-policy.wasm \
     -r test_data/ingress.json \
     --settings-json '{"denied_labels": ["foo", "cc-center"], "mandatory_labels": ["cc-center"]}'
 
@@ -104,7 +104,7 @@
 }
 
 @test "fail settings validation because of invalid constraint" {
-  run kwctl run policy.wasm \
+  run kwctl run annotated-policy.wasm \
     -r test_data/ingress.json \
     --settings-json '{"constrained_labels": {"cc-center": "^cc-[12$"}}'
 
