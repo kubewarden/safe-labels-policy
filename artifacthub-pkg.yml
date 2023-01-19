@@ -1,25 +1,19 @@
 ---
-version: 0.1.7
+version: 0.1.8
 name: safe-labels
 displayName: Safe Labels
-createdAt: '2022-07-19T16:07:37+02:00'
+createdAt: '2023-01-19T14:46:21+02:00'
 description: A policy that validates Kubernetes' resource labels
 license: Apache-2.0
 homeURL: https://github.com/kubewarden/safe-labels-policy
 containersImages:
 - name: policy
-  image: ghcr.io/kubewarden/policies/safe-labels:v0.1.7
-install: |
-  The policy can be obtained using [`kwctl`](https://github.com/kubewarden/kwctl/):
-
-  ```console
-  kwctl pull ghcr.io/kubewarden/policies/safe-labels:v0.1.7
-  ```
+  image: ghcr.io/kubewarden/policies/safe-labels:v0.1.8
 keywords:
 - labels
 links:
 - name: policy
-  url: https://github.com/kubewarden/safe-labels-policy/releases/download/v0.1.7/policy.wasm
+  url: https://github.com/kubewarden/safe-labels-policy/releases/download/v0.1.8/policy.wasm
 - name: source
   url: https://github.com/kubewarden/safe-labels-policy
 provider:
@@ -30,3 +24,45 @@ annotations:
   kubewarden/resources: "*"
   kubewarden/mutation: false
   kubewarden/contextAware: false
+  kubewarden/rules: |
+    rules:
+    - apiGroups: ["*"]
+      apiVersions: ["*"]
+      resources: ["*"]
+      operations: ["CREATE", "UPDATE"]
+  kubewarden/questions-ui: |
+    questions:
+    - default: null
+      description: >-
+        This policy validates the labels of generic Kubernetes objects. It rejects
+        all the resources that use one or more labels on the deny list. It also
+        allows you to put constraints on specific labels. The constraints are
+        expressed as regular expression. It will also allow you to require specific
+        labels to be part of the resource.
+      group: Settings
+      label: Description
+      required: false
+      hide_input: true
+      type: map
+      variable: description
+    - default: []
+      description: A list of labels that cannot be used
+      group: Settings
+      label: Denied labels
+      required: false
+      type: array[
+      variable: denied_labels
+    - default: []
+      description: A list of labels that must be defined
+      group: Settings
+      label: Mandatory labels
+      required: false
+      type: array[
+      variable: mandatory_labels
+    - default: []
+      tooltip: Annotations that are validated with user-defined RegExp
+      group: Settings
+      label: Constrained labels
+      target: true
+      type: map[
+      variable: constrained_labels

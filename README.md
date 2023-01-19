@@ -1,9 +1,3 @@
- Continuous integration | License
- -----------------------|--------
-[![Unit Tests](https://github.com/kubewarden/safe-labels-policy/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/kubewarden/safe-labels-policy/actions/workflows/unit-tests.yml) [![end to end tests](https://github.com/kubewarden/safe-labels-policy/actions/workflows/e2e-tests.yml/badge.svg)](https://github.com/kubewarden/safe-labels-policy/actions/workflows/e2e-tests.yml) | [![License: Apache 2.0](https://img.shields.io/badge/License-Apache2.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
-
-# How the policy works
-
 This policy validates the labels of generic Kubernetes objects.
 
 The policy rejects all the resources that use one or more labels on the
@@ -76,47 +70,4 @@ spec:
             name: test
             port:
               number: 80
-```
-
-# Obtain policy
-
-The policy is automatically published as an OCI artifact inside of
-[this](https://github.com/orgs/kubewarden/packages/container/package/policies%2Fsafe-labels)
-container registry.
-
-# Using the policy
-
-The easiest way to use this policy is through the [kubewarden-controller](https://github.com/kubewarden/kubewarden-controller).
-
-# Testing
-
-This policy comes with a set of unit tests implemented using the Go testing
-framework.
-
-As usual, the tests are defined inside of the `_test.go` files. Given these
-tests are not part of the final WebAssembly binary, the official Go compiler
-can be used to run them. Hence they can take advantage of the `encoding/json`
-package to reduce some testing boiler plate.
-
-The unit tests can be run via a simple command:
-
-```shell
-make test
-```
-
-It's also important the test the final result of the TinyGo compilation:
-the actual WebAssembly module.
-
-This is done by a second set of end-to-end tests. These tests use the
-`policicy-testdrive` cli provided by the Kubewarden project to load and execute
-the policy.
-
-The e2e tests are implemented using [bats](https://github.com/sstephenson/bats):
-the Bash Automated Testing System.
-
-The end-to-end tests are defined inside of the `e2e.bats` file and can
-be run via this commmand:
-
-```shell
-make e2e-tests
 ```
