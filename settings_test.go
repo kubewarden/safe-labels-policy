@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	kubewarden_testing "github.com/kubewarden/policy-sdk-go/testing"
+	kw_protocol "github.com/kubewarden/policy-sdk-go/protocol"
 )
 
 func TestParseValidSettings(t *testing.T) {
@@ -90,7 +90,7 @@ func TestDetectValidSettings(t *testing.T) {
 		t.Errorf("Unexpected error %+v", err)
 	}
 
-	var response kubewarden_testing.SettingsValidationResponse
+	var response kw_protocol.SettingsValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -116,7 +116,7 @@ func TestDetectNotValidSettingsDueToBrokenRegexp(t *testing.T) {
 		t.Errorf("Unexpected error %+v", err)
 	}
 
-	var response kubewarden_testing.SettingsValidationResponse
+	var response kw_protocol.SettingsValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -146,7 +146,7 @@ func TestDetectNotValidSettingsDueToConflictingDeniedAndConstrainedLabels(t *tes
 		t.Errorf("Unexpected error %+v", err)
 	}
 
-	var response kubewarden_testing.SettingsValidationResponse
+	var response kw_protocol.SettingsValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -156,7 +156,7 @@ func TestDetectNotValidSettingsDueToConflictingDeniedAndConstrainedLabels(t *tes
 	}
 
 	expected_error_msg := "Provided settings are not valid: These labels cannot be constrained and denied at the same time: cost-center"
-	if response.Message != expected_error_msg {
+	if *response.Message != expected_error_msg {
 		t.Errorf("Unexpected validation error message: %s", response.Message)
 	}
 }
@@ -177,7 +177,7 @@ func TestDetectNotValidSettingsDueToConflictingDeniedAndMandatoryLabels(t *testi
 		t.Errorf("Unexpected error %+v", err)
 	}
 
-	var response kubewarden_testing.SettingsValidationResponse
+	var response kw_protocol.SettingsValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -187,7 +187,7 @@ func TestDetectNotValidSettingsDueToConflictingDeniedAndMandatoryLabels(t *testi
 	}
 
 	expected_error_msg := "Provided settings are not valid: These labels cannot be mandatory and denied at the same time: owner"
-	if response.Message != expected_error_msg {
+	if *response.Message != expected_error_msg {
 		t.Errorf("Unexpected validation error message: %s", response.Message)
 	}
 }
