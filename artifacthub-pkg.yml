@@ -4,27 +4,27 @@
 #
 # This config can be saved to its default location with:
 #   kwctl scaffold artifacthub > artifacthub-pkg.yml 
-version: 0.1.10
+version: 0.1.11
 name: safe-labels
 displayName: Safe Labels
-createdAt: 2023-03-24T16:45:09.901809392Z
+createdAt: 2023-03-29T09:25:17.8897014Z
 description: A policy that validates Kubernetes' resource labels
 license: Apache-2.0
 homeURL: https://github.com/kubewarden/safe-labels-policy
 containersImages:
 - name: policy
-  image: ghcr.io/kubewarden/policies/safe-labels:v0.1.10
+  image: ghcr.io/kubewarden/policies/safe-labels:v0.1.11
 keywords:
 - labels
 links:
 - name: policy
-  url: https://github.com/kubewarden/safe-labels-policy/releases/download/v0.1.10/policy.wasm
+  url: https://github.com/kubewarden/safe-labels-policy/releases/download/v0.1.11/policy.wasm
 - name: source
   url: https://github.com/kubewarden/safe-labels-policy
 install: |
   The policy can be obtained using [`kwctl`](https://github.com/kubewarden/kwctl):
   ```console
-  kwctl pull ghcr.io/kubewarden/policies/safe-labels:v0.1.10
+  kwctl pull ghcr.io/kubewarden/policies/safe-labels:v0.1.11
   ```
 maintainers:
 - name: Kubewarden developers
