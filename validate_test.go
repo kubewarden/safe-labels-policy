@@ -4,18 +4,18 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/deckarep/golang-set"
+	kubewarden_protocol "github.com/kubewarden/policy-sdk-go/protocol"
 	kubewarden_testing "github.com/kubewarden/policy-sdk-go/testing"
 )
 
 func TestEmptySettingsLeadsToRequestAccepted(t *testing.T) {
-	settings := Settings{
-		DeniedLabels:      mapset.NewThreadUnsafeSet(),
-		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
-		ConstrainedLabels: make(map[string]*RegularExpression),
+	settings := RawSettings{
+		DeniedLabels:      []string{},
+		MandatoryLabels:   []string{},
+		ConstrainedLabels: make(map[string]string),
 	}
 
-	payload, err := kubewarden_testing.BuildValidationRequest(
+	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
 		"test_data/ingress.json",
 		&settings)
 	if err != nil {
@@ -27,7 +27,7 @@ func TestEmptySettingsLeadsToRequestAccepted(t *testing.T) {
 		t.Errorf("Unexpected error: %+v", err)
 	}
 
-	var response kubewarden_testing.ValidationResponse
+	var response kubewarden_protocol.ValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -38,20 +38,15 @@ func TestEmptySettingsLeadsToRequestAccepted(t *testing.T) {
 }
 
 func TestRequestAccepted(t *testing.T) {
-	constrainedLabels := make(map[string]*RegularExpression)
-	re, err := CompileRegularExpression(`^world-`)
-	if err != nil {
-		t.Errorf("Unexpected error: %+v", err)
-	}
-	constrainedLabels["hello"] = re
-
-	settings := Settings{
-		DeniedLabels:      mapset.NewThreadUnsafeSetFromSlice([]interface{}{"bad1", "bad2"}),
-		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
-		ConstrainedLabels: constrainedLabels,
+	settings := RawSettings{
+		DeniedLabels:    []string{"bad1", "bad2"},
+		MandatoryLabels: []string{},
+		ConstrainedLabels: map[string]string{
+			"hello": "^world-",
+		},
 	}
 
-	payload, err := kubewarden_testing.BuildValidationRequest(
+	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
 		"test_data/ingress.json",
 		&settings)
 	if err != nil {
@@ -63,7 +58,7 @@ func TestRequestAccepted(t *testing.T) {
 		t.Errorf("Unexpected error: %+v", err)
 	}
 
-	var response kubewarden_testing.ValidationResponse
+	var response kubewarden_protocol.ValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -74,19 +69,15 @@ func TestRequestAccepted(t *testing.T) {
 }
 
 func TestAcceptRequestWithConstraintLabel(t *testing.T) {
-	constrainedLabels := make(map[string]*RegularExpression)
-	re, err := CompileRegularExpression(`^team-`)
-	if err != nil {
-		t.Errorf("Unexpected error: %s", err)
-	}
-	constrainedLabels["owner"] = re
-	settings := Settings{
-		DeniedLabels:      mapset.NewThreadUnsafeSetFromSlice([]interface{}{"bad1", "bad2"}),
-		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
-		ConstrainedLabels: constrainedLabels,
+	settings := RawSettings{
+		DeniedLabels:    []string{"bad1", "bad2"},
+		MandatoryLabels: []string{},
+		ConstrainedLabels: map[string]string{
+			"owner": "^team-",
+		},
 	}
 
-	payload, err := kubewarden_testing.BuildValidationRequest(
+	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
 		"test_data/ingress.json",
 		&settings)
 	if err != nil {
@@ -98,7 +89,7 @@ func TestAcceptRequestWithConstraintLabel(t *testing.T) {
 		t.Errorf("Unexpected error: %+v", err)
 	}
 
-	var response kubewarden_testing.ValidationResponse
+	var response kubewarden_protocol.ValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -109,20 +100,15 @@ func TestAcceptRequestWithConstraintLabel(t *testing.T) {
 }
 
 func TestRejectionBecauseDeniedLabel(t *testing.T) {
-	constrainedLabels := make(map[string]*RegularExpression)
-	re, err := CompileRegularExpression(`^world-`)
-	if err != nil {
-		t.Errorf("Unexpected error: %+v", err)
-	}
-	constrainedLabels["hello"] = re
-
-	settings := Settings{
-		DeniedLabels:      mapset.NewThreadUnsafeSetFromSlice([]interface{}{"owner"}),
-		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
-		ConstrainedLabels: constrainedLabels,
+	settings := RawSettings{
+		DeniedLabels:    []string{"owner"},
+		MandatoryLabels: []string{},
+		ConstrainedLabels: map[string]string{
+			"hello": "^world-",
+		},
 	}
 
-	payload, err := kubewarden_testing.BuildValidationRequest(
+	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
 		"test_data/ingress.json",
 		&settings)
 	if err != nil {
@@ -134,7 +120,7 @@ func TestRejectionBecauseDeniedLabel(t *testing.T) {
 		t.Errorf("Unexpected error: %+v", err)
 	}
 
-	var response kubewarden_testing.ValidationResponse
+	var response kubewarden_protocol.ValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -143,9 +129,9 @@ func TestRejectionBecauseDeniedLabel(t *testing.T) {
 		t.Error("Unexpected accept response")
 	}
 
-	expected_message := "The following labels are denied: owner"
-	if response.Message != expected_message {
-		t.Errorf("Got '%s' instead of '%s'", response.Message, expected_message)
+	expectedMessage := "The following labels are denied: owner"
+	if *response.Message != expectedMessage {
+		t.Errorf("Got '%s' instead of '%s'", *response.Message, expectedMessage)
 	}
 }
 
@@ -157,13 +143,15 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 	}
 	constrainedLabels["cc-center"] = re
 
-	settings := Settings{
-		DeniedLabels:      mapset.NewThreadUnsafeSet(),
-		MandatoryLabels:   mapset.NewThreadUnsafeSet(),
-		ConstrainedLabels: constrainedLabels,
+	settings := RawSettings{
+		DeniedLabels:    []string{},
+		MandatoryLabels: []string{},
+		ConstrainedLabels: map[string]string{
+			"cc-center": `^cc-\d+$`,
+		},
 	}
 
-	payload, err := kubewarden_testing.BuildValidationRequest(
+	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
 		"test_data/ingress.json",
 		&settings)
 	if err != nil {
@@ -175,7 +163,7 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 		t.Errorf("Unexpected error: %+v", err)
 	}
 
-	var response kubewarden_testing.ValidationResponse
+	var response kubewarden_protocol.ValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -184,20 +172,20 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 		t.Error("Unexpected accept response")
 	}
 
-	expected_message := "The following labels are violating user constraints: cc-center"
-	if response.Message != expected_message {
-		t.Errorf("Got '%s' instead of '%s'", response.Message, expected_message)
+	expectedMessage := "The following labels are violating user constraints: cc-center"
+	if *response.Message != expectedMessage {
+		t.Errorf("Got '%s' instead of '%s'", *response.Message, expectedMessage)
 	}
 }
 
 func TestRejectionBecauseConstrainedLabelMissing(t *testing.T) {
-	settings := Settings{
-		DeniedLabels:      mapset.NewThreadUnsafeSet(),
-		MandatoryLabels:   mapset.NewThreadUnsafeSetFromSlice([]interface{}{"required"}),
-		ConstrainedLabels: make(map[string]*RegularExpression),
+	settings := RawSettings{
+		DeniedLabels:      []string{},
+		MandatoryLabels:   []string{"required"},
+		ConstrainedLabels: map[string]string{},
 	}
 
-	payload, err := kubewarden_testing.BuildValidationRequest(
+	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
 		"test_data/ingress.json",
 		&settings)
 	if err != nil {
@@ -209,7 +197,7 @@ func TestRejectionBecauseConstrainedLabelMissing(t *testing.T) {
 		t.Errorf("Unexpected error: %+v", err)
 	}
 
-	var response kubewarden_testing.ValidationResponse
+	var response kubewarden_protocol.ValidationResponse
 	if err := json.Unmarshal(responsePayload, &response); err != nil {
 		t.Errorf("Unexpected error: %+v", err)
 	}
@@ -218,8 +206,8 @@ func TestRejectionBecauseConstrainedLabelMissing(t *testing.T) {
 		t.Error("Unexpected accept response")
 	}
 
-	expected_message := "The following mandatory labels are missing: required"
-	if response.Message != expected_message {
-		t.Errorf("Got '%s' instead of '%s'", response.Message, expected_message)
+	expectedMessage := "The following mandatory labels are missing: required"
+	if *response.Message != expectedMessage {
+		t.Errorf("Got '%s' instead of '%s'", *response.Message, expectedMessage)
 	}
 }

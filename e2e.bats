@@ -64,7 +64,7 @@
 
 @test "reject because a required label does not exist" {
   run kwctl run annotated-policy.wasm \
-    -r test_data/ingress.json --settings-json '{"mandatory_labels": ["required"], "constrained_labels": {"foo", ".*"}}'
+    -r test_data/ingress.json --settings-json '{"mandatory_labels": ["required"], "constrained_labels": {"foo": ".*"}}'
 
   # this prints the output when one the checks below fails
   echo "output = ${output}"

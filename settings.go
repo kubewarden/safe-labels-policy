@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/deckarep/golang-set"
-	"github.com/kubewarden/gjson"
-	kubewarden "github.com/kubewarden/policy-sdk-go"
-
 	"fmt"
 	"regexp"
 	"strings"
+
+	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/kubewarden/gjson"
+	kubewarden "github.com/kubewarden/policy-sdk-go"
+	easyjson "github.com/mailru/easyjson"
 )
 
 // A wrapper around the standard regexp.Regexp struct
@@ -47,83 +48,22 @@ func (r *RegularExpression) MarshalText() ([]byte, error) {
 }
 
 type Settings struct {
-	DeniedLabels      mapset.Set                    `json:"denied_labels"`
-	MandatoryLabels   mapset.Set                    `json:"mandatory_labels"`
+	DeniedLabels      mapset.Set[string]            `json:"denied_labels"`
+	MandatoryLabels   mapset.Set[string]            `json:"mandatory_labels"`
 	ConstrainedLabels map[string]*RegularExpression `json:"constrained_labels"`
 }
 
-// Builds a new Settings instance starting from a validation
-// request payload:
-// {
-//    "request": ...,
-//    "settings": {
-//       "denied_labels": [...],
-//       "mandatory_labels": [...],
-//       "constrained_labels": { ... }
-//    }
-// }
-func NewSettingsFromValidationReq(payload []byte) (Settings, error) {
-	// Note well: we don't validate the input JSON now, this has
-	// already done inside of the `validate` function
-
-	return newSettings(
-		payload,
-		"settings.denied_labels",
-		"settings.mandatory_labels",
-		"settings.constrained_labels")
-}
-
-// Builds a new Settings instance starting from a Settings
-// payload:
-// {
-//    "denied_names": [ ... ],
-//    "constrained_labels": { ... }
-// }
-func NewSettingsFromValidateSettingsPayload(payload []byte) (Settings, error) {
-	if !gjson.ValidBytes(payload) {
-		return Settings{}, fmt.Errorf("denied JSON payload")
-	}
-
-	return newSettings(
-		payload,
-		"denied_labels",
-		"mandatory_labels",
-		"constrained_labels")
-}
-
-func newSettings(payload []byte, paths ...string) (Settings, error) {
-	if len(paths) != 3 {
-		return Settings{}, fmt.Errorf("wrong number of json paths")
-	}
-
-	data := gjson.GetManyBytes(payload, paths...)
-
-	deniedLabels := mapset.NewThreadUnsafeSet()
-	data[0].ForEach(func(_, entry gjson.Result) bool {
-		deniedLabels.Add(entry.String())
-		return true
-	})
-
-	mandatoryLabels := mapset.NewThreadUnsafeSet()
-	data[1].ForEach(func(_, entry gjson.Result) bool {
-		mandatoryLabels.Add(entry.String())
-		return true
-	})
+func NewSettingsFromRaw(rawSettings *RawSettings) (Settings, error) {
+	deniedLabels := mapset.NewThreadUnsafeSet[string](rawSettings.DeniedLabels...)
+	mandatoryLabels := mapset.NewThreadUnsafeSet[string](rawSettings.MandatoryLabels...)
 
 	constrainedLabels := make(map[string]*RegularExpression)
-	var err error
-	data[2].ForEach(func(key, value gjson.Result) bool {
-		var regExp *RegularExpression
-		regExp, err = CompileRegularExpression(value.String())
+	for key, value := range rawSettings.ConstrainedLabels {
+		re, err := CompileRegularExpression(value)
 		if err != nil {
-			return false
+			return Settings{}, err
 		}
-
-		constrainedLabels[key.String()] = regExp
-		return true
-	})
-	if err != nil {
-		return Settings{}, err
+		constrainedLabels[key] = re
 	}
 
 	return Settings{
@@ -133,8 +73,48 @@ func newSettings(payload []byte, paths ...string) (Settings, error) {
 	}, nil
 }
 
+// Builds a new Settings instance starting from a validation
+// request payload:
+//
+//	{
+//	   "request": ...,
+//	   "settings": {
+//	      "denied_labels": [...],
+//	      "mandatory_labels": [...],
+//	      "constrained_labels": { ... }
+//	   }
+//	}
+func NewSettingsFromValidationReq(payload []byte) (Settings, error) {
+	settingsJson := gjson.GetBytes(payload, "settings")
+
+	rawSettings := RawSettings{}
+	err := easyjson.Unmarshal([]byte(settingsJson.Raw), &rawSettings)
+	if err != nil {
+		return Settings{}, err
+	}
+
+	return NewSettingsFromRaw(&rawSettings)
+}
+
+// Builds a new Settings instance starting from a Settings
+// payload:
+//
+//	{
+//	   "denied_names": [ ... ],
+//	   "constrained_labels": { ... }
+//	}
+func NewSettingsFromValidateSettingsPayload(payload []byte) (Settings, error) {
+	rawSettings := RawSettings{}
+	err := easyjson.Unmarshal(payload, &rawSettings)
+	if err != nil {
+		return Settings{}, err
+	}
+
+	return NewSettingsFromRaw(&rawSettings)
+}
+
 func (s *Settings) Valid() (bool, error) {
-	constrainedLabels := mapset.NewThreadUnsafeSet()
+	constrainedLabels := mapset.NewThreadUnsafeSet[string]()
 
 	for label := range s.ConstrainedLabels {
 		constrainedLabels.Add(label)
@@ -144,10 +124,7 @@ func (s *Settings) Valid() (bool, error) {
 
 	constrainedAndDenied := constrainedLabels.Intersect(s.DeniedLabels)
 	if constrainedAndDenied.Cardinality() != 0 {
-		violations := []string{}
-		for _, v := range constrainedAndDenied.ToSlice() {
-			violations = append(violations, v.(string))
-		}
+		violations := constrainedAndDenied.ToSlice()
 		errors = append(
 			errors,
 			fmt.Sprintf(
@@ -159,10 +136,7 @@ func (s *Settings) Valid() (bool, error) {
 
 	mandatoryAndDenied := s.MandatoryLabels.Intersect(s.DeniedLabels)
 	if mandatoryAndDenied.Cardinality() != 0 {
-		violations := []string{}
-		for _, v := range mandatoryAndDenied.ToSlice() {
-			violations = append(violations, v.(string))
-		}
+		violations := mandatoryAndDenied.ToSlice()
 		errors = append(
 			errors,
 			fmt.Sprintf(

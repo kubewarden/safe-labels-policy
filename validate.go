@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/kubewarden/gjson"
 	kubewarden "github.com/kubewarden/policy-sdk-go"
 )
@@ -27,7 +27,7 @@ func validate(payload []byte) ([]byte, error) {
 		payload,
 		"request.object.metadata.labels")
 
-	labels := mapset.NewThreadUnsafeSet()
+	labels := mapset.NewThreadUnsafeSet[string]()
 	denied_labels_violations := []string{}
 	constrained_labels_violations := []string{}
 
@@ -52,11 +52,11 @@ func validate(payload []byte) ([]byte, error) {
 		return true
 	})
 
-	error_msgs := []string{}
+	errorMsgs := []string{}
 
 	if len(denied_labels_violations) > 0 {
-		error_msgs = append(
-			error_msgs,
+		errorMsgs = append(
+			errorMsgs,
 			fmt.Sprintf(
 				"The following labels are denied: %s",
 				strings.Join(denied_labels_violations, ","),
@@ -64,32 +64,29 @@ func validate(payload []byte) ([]byte, error) {
 	}
 
 	if len(constrained_labels_violations) > 0 {
-		error_msgs = append(
-			error_msgs,
+		errorMsgs = append(
+			errorMsgs,
 			fmt.Sprintf(
 				"The following labels are violating user constraints: %s",
 				strings.Join(constrained_labels_violations, ","),
 			))
 	}
 
-	mandatory_labels_violations := settings.MandatoryLabels.Difference(labels)
-	if mandatory_labels_violations.Cardinality() > 0 {
-		violations := []string{}
-		for _, v := range mandatory_labels_violations.ToSlice() {
-			violations = append(violations, v.(string))
-		}
+	mandatoryLabelsViolations := settings.MandatoryLabels.Difference(labels)
+	if mandatoryLabelsViolations.Cardinality() > 0 {
+		violations := mandatoryLabelsViolations.ToSlice()
 
-		error_msgs = append(
-			error_msgs,
+		errorMsgs = append(
+			errorMsgs,
 			fmt.Sprintf(
 				"The following mandatory labels are missing: %s",
 				strings.Join(violations, ","),
 			))
 	}
 
-	if len(error_msgs) > 0 {
+	if len(errorMsgs) > 0 {
 		return kubewarden.RejectRequest(
-			kubewarden.Message(strings.Join(error_msgs, ". ")),
+			kubewarden.Message(strings.Join(errorMsgs, ". ")),
 			kubewarden.NoCode)
 	}
 
