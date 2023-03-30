@@ -26,7 +26,7 @@ questions:
   required: false
   type: array[
   variable: mandatory_labels
-- default: []
+- default: {}
   tooltip: Annotations that are validated with user-defined RegExp
   group: Settings
   label: Constrained labels
