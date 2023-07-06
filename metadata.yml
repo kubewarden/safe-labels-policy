@@ -1,20 +1,28 @@
 rules:
-- apiGroups: ["*"]
-  apiVersions: ["*"]
-  resources: ["*"]
-  operations: ["CREATE", "UPDATE"]
+  - apiGroups:
+      - '*'
+    apiVersions:
+      - '*'
+    resources:
+      - '*'
+    operations:
+      - CREATE
+      - UPDATE
 mutating: false
 contextAware: false
+backgroundAudit: false
 annotations:
   # artifacthub specific
   io.artifacthub.displayName: Safe Labels
-  io.artifacthub.resources: "*"
+  io.artifacthub.resources: '*'
   io.artifacthub.keywords: labels
+  # kubewarden specific
   io.kubewarden.policy.ociUrl: ghcr.io/kubewarden/policies/safe-labels
-  # kubewarden specific:
   io.kubewarden.policy.title: safe-labels
   io.kubewarden.policy.description: A policy that validates Kubernetes' resource labels
   io.kubewarden.policy.author: Kubewarden developers <cncf-kubewarden-maintainers@lists.cncf.io>
   io.kubewarden.policy.url: https://github.com/kubewarden/safe-labels-policy
   io.kubewarden.policy.source: https://github.com/kubewarden/safe-labels-policy
   io.kubewarden.policy.license: Apache-2.0
+  io.kubewarden.policy.category: Resource validation
+  io.kubewarden.policy.severity: low
