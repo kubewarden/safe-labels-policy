@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -8,8 +9,13 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/kubewarden/gjson"
 	kubewarden "github.com/kubewarden/policy-sdk-go"
-	easyjson "github.com/mailru/easyjson"
 )
+
+type RawSettings struct {
+	DeniedLabels      []string          `json:"denied_labels"`
+	MandatoryLabels   []string          `json:"mandatory_labels"`
+	ConstrainedLabels map[string]string `json:"constrained_labels"`
+}
 
 // A wrapper around the standard regexp.Regexp struct
 // that implements marshalling and unmarshalling
@@ -19,7 +25,7 @@ type RegularExpression struct {
 
 // Convenience method to build a regular expression
 func CompileRegularExpression(expr string) (*RegularExpression, error) {
-	nativeRegExp, err := regexp.Compile(expr)
+    nativeRegExp, err := regexp.Compile(expr)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +94,7 @@ func NewSettingsFromValidationReq(payload []byte) (Settings, error) {
 	settingsJson := gjson.GetBytes(payload, "settings")
 
 	rawSettings := RawSettings{}
-	err := easyjson.Unmarshal([]byte(settingsJson.Raw), &rawSettings)
+	err := json.Unmarshal([]byte(settingsJson.Raw), &rawSettings)
 	if err != nil {
 		return Settings{}, err
 	}
@@ -105,7 +111,7 @@ func NewSettingsFromValidationReq(payload []byte) (Settings, error) {
 //	}
 func NewSettingsFromValidateSettingsPayload(payload []byte) (Settings, error) {
 	rawSettings := RawSettings{}
-	err := easyjson.Unmarshal(payload, &rawSettings)
+	err := json.Unmarshal(payload, &rawSettings)
 	if err != nil {
 		return Settings{}, err
 	}
