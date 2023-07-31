@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -8,7 +9,6 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/kubewarden/gjson"
 	kubewarden "github.com/kubewarden/policy-sdk-go"
-	easyjson "github.com/mailru/easyjson"
 )
 
 // A wrapper around the standard regexp.Regexp struct
@@ -53,26 +53,6 @@ type Settings struct {
 	ConstrainedLabels map[string]*RegularExpression `json:"constrained_labels"`
 }
 
-func NewSettingsFromRaw(rawSettings *RawSettings) (Settings, error) {
-	deniedLabels := mapset.NewThreadUnsafeSet[string](rawSettings.DeniedLabels...)
-	mandatoryLabels := mapset.NewThreadUnsafeSet[string](rawSettings.MandatoryLabels...)
-
-	constrainedLabels := make(map[string]*RegularExpression)
-	for key, value := range rawSettings.ConstrainedLabels {
-		re, err := CompileRegularExpression(value)
-		if err != nil {
-			return Settings{}, err
-		}
-		constrainedLabels[key] = re
-	}
-
-	return Settings{
-		DeniedLabels:      deniedLabels,
-		MandatoryLabels:   mandatoryLabels,
-		ConstrainedLabels: constrainedLabels,
-	}, nil
-}
-
 // Builds a new Settings instance starting from a validation
 // request payload:
 //
@@ -87,13 +67,13 @@ func NewSettingsFromRaw(rawSettings *RawSettings) (Settings, error) {
 func NewSettingsFromValidationReq(payload []byte) (Settings, error) {
 	settingsJson := gjson.GetBytes(payload, "settings")
 
-	rawSettings := RawSettings{}
-	err := easyjson.Unmarshal([]byte(settingsJson.Raw), &rawSettings)
+	settings := Settings{}
+	err := json.Unmarshal([]byte(settingsJson.Raw), &settings)
 	if err != nil {
 		return Settings{}, err
 	}
 
-	return NewSettingsFromRaw(&rawSettings)
+	return settings, nil
 }
 
 // Builds a new Settings instance starting from a Settings
@@ -104,13 +84,13 @@ func NewSettingsFromValidationReq(payload []byte) (Settings, error) {
 //	   "constrained_labels": { ... }
 //	}
 func NewSettingsFromValidateSettingsPayload(payload []byte) (Settings, error) {
-	rawSettings := RawSettings{}
-	err := easyjson.Unmarshal(payload, &rawSettings)
+	settings := Settings{}
+	err := json.Unmarshal(payload, &settings)
 	if err != nil {
 		return Settings{}, err
 	}
 
-	return NewSettingsFromRaw(&rawSettings)
+	return settings, nil
 }
 
 func (s *Settings) Valid() (bool, error) {
@@ -150,6 +130,33 @@ func (s *Settings) Valid() (bool, error) {
 		return false, fmt.Errorf("%s", strings.Join(errors, "; "))
 	}
 	return true, nil
+}
+
+func (s *Settings) UnmarshalJSON(data []byte) error {
+	rawSettings := struct {
+		DeniedLabels      []string          `json:"denied_labels"`
+		MandatoryLabels   []string          `json:"mandatory_labels"`
+		ConstrainedLabels map[string]string `json:"constrained_labels"`
+	}{}
+
+	err := json.Unmarshal(data, &rawSettings)
+	if err != nil {
+		return err
+	}
+
+	s.DeniedLabels = mapset.NewThreadUnsafeSet[string](rawSettings.DeniedLabels...)
+	s.MandatoryLabels = mapset.NewThreadUnsafeSet[string](rawSettings.MandatoryLabels...)
+
+	s.ConstrainedLabels = make(map[string]*RegularExpression)
+	for key, value := range rawSettings.ConstrainedLabels {
+		re, err := CompileRegularExpression(value)
+		if err != nil {
+			return err
+		}
+		s.ConstrainedLabels[key] = re
+	}
+
+	return nil
 }
 
 func validateSettings(payload []byte) ([]byte, error) {

@@ -2,17 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"regexp"
 	"testing"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	kubewarden_protocol "github.com/kubewarden/policy-sdk-go/protocol"
 	kubewarden_testing "github.com/kubewarden/policy-sdk-go/testing"
 )
 
 func TestEmptySettingsLeadsToRequestAccepted(t *testing.T) {
-	settings := RawSettings{
-		DeniedLabels:      []string{},
-		MandatoryLabels:   []string{},
-		ConstrainedLabels: make(map[string]string),
+	settings := Settings{
+		DeniedLabels:      mapset.NewThreadUnsafeSet[string](),
+		MandatoryLabels:   mapset.NewThreadUnsafeSet[string](),
+		ConstrainedLabels: map[string]*RegularExpression{},
 	}
 
 	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
@@ -38,11 +40,13 @@ func TestEmptySettingsLeadsToRequestAccepted(t *testing.T) {
 }
 
 func TestRequestAccepted(t *testing.T) {
-	settings := RawSettings{
-		DeniedLabels:    []string{"bad1", "bad2"},
-		MandatoryLabels: []string{},
-		ConstrainedLabels: map[string]string{
-			"hello": "^world-",
+	settings := Settings{
+		DeniedLabels:    mapset.NewThreadUnsafeSet("bad1", "bad2"),
+		MandatoryLabels: mapset.NewThreadUnsafeSet[string](),
+		ConstrainedLabels: map[string]*RegularExpression{
+			"owner": {
+				Regexp: regexp.MustCompile("team-"),
+			},
 		},
 	}
 
@@ -69,11 +73,13 @@ func TestRequestAccepted(t *testing.T) {
 }
 
 func TestAcceptRequestWithConstraintLabel(t *testing.T) {
-	settings := RawSettings{
-		DeniedLabels:    []string{"bad1", "bad2"},
-		MandatoryLabels: []string{},
-		ConstrainedLabels: map[string]string{
-			"owner": "^team-",
+	settings := Settings{
+		DeniedLabels:    mapset.NewThreadUnsafeSet("bad1", "bad2"),
+		MandatoryLabels: mapset.NewThreadUnsafeSet[string](),
+		ConstrainedLabels: map[string]*RegularExpression{
+			"owner": {
+				Regexp: regexp.MustCompile(`^team-`),
+			},
 		},
 	}
 
@@ -100,11 +106,13 @@ func TestAcceptRequestWithConstraintLabel(t *testing.T) {
 }
 
 func TestRejectionBecauseDeniedLabel(t *testing.T) {
-	settings := RawSettings{
-		DeniedLabels:    []string{"owner"},
-		MandatoryLabels: []string{},
-		ConstrainedLabels: map[string]string{
-			"hello": "^world-",
+	settings := Settings{
+		DeniedLabels:    mapset.NewThreadUnsafeSet("owner"),
+		MandatoryLabels: mapset.NewThreadUnsafeSet[string](),
+		ConstrainedLabels: map[string]*RegularExpression{
+			"hello": {
+				Regexp: regexp.MustCompile(`^world-`),
+			},
 		},
 	}
 
@@ -143,11 +151,13 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 	}
 	constrainedLabels["cc-center"] = re
 
-	settings := RawSettings{
-		DeniedLabels:    []string{},
-		MandatoryLabels: []string{},
-		ConstrainedLabels: map[string]string{
-			"cc-center": `^cc-\d+$`,
+	settings := Settings{
+		DeniedLabels:    mapset.NewThreadUnsafeSet[string](),
+		MandatoryLabels: mapset.NewThreadUnsafeSet[string](),
+		ConstrainedLabels: map[string]*RegularExpression{
+			"cc-center": {
+				Regexp: regexp.MustCompile(`^cc-\d+$`),
+			},
 		},
 	}
 
@@ -179,10 +189,10 @@ func TestRejectionBecauseConstrainedLabelNotValid(t *testing.T) {
 }
 
 func TestRejectionBecauseConstrainedLabelMissing(t *testing.T) {
-	settings := RawSettings{
-		DeniedLabels:      []string{},
-		MandatoryLabels:   []string{"required"},
-		ConstrainedLabels: map[string]string{},
+	settings := Settings{
+		DeniedLabels:      mapset.NewThreadUnsafeSet[string](),
+		MandatoryLabels:   mapset.NewThreadUnsafeSet("required"),
+		ConstrainedLabels: nil,
 	}
 
 	payload, err := kubewarden_testing.BuildValidationRequestFromFixture(
