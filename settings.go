@@ -133,10 +133,12 @@ func (s *Settings) Valid() (bool, error) {
 }
 
 func (s *Settings) UnmarshalJSON(data []byte) error {
+	// This is needed becaus golang-set v2.3.0 has a bug that prevents
+	// the correct unmarshalling of ThreadUnsafeSet types.
 	rawSettings := struct {
-		DeniedLabels      []string          `json:"denied_labels"`
-		MandatoryLabels   []string          `json:"mandatory_labels"`
-		ConstrainedLabels map[string]string `json:"constrained_labels"`
+		DeniedLabels      []string                      `json:"denied_labels"`
+		MandatoryLabels   []string                      `json:"mandatory_labels"`
+		ConstrainedLabels map[string]*RegularExpression `json:"constrained_labels"`
 	}{}
 
 	err := json.Unmarshal(data, &rawSettings)
@@ -146,15 +148,7 @@ func (s *Settings) UnmarshalJSON(data []byte) error {
 
 	s.DeniedLabels = mapset.NewThreadUnsafeSet[string](rawSettings.DeniedLabels...)
 	s.MandatoryLabels = mapset.NewThreadUnsafeSet[string](rawSettings.MandatoryLabels...)
-
-	s.ConstrainedLabels = make(map[string]*RegularExpression)
-	for key, value := range rawSettings.ConstrainedLabels {
-		re, err := CompileRegularExpression(value)
-		if err != nil {
-			return err
-		}
-		s.ConstrainedLabels[key] = re
-	}
+	s.ConstrainedLabels = rawSettings.ConstrainedLabels
 
 	return nil
 }
