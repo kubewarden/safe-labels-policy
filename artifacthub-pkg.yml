@@ -7,7 +7,7 @@
 version: 0.1.14
 name: safe-labels
 displayName: Safe Labels
-createdAt: 2023-07-28T08:50:55.333527563Z
+createdAt: 2023-10-16T08:31:39.047026359Z
 description: A policy that validates Kubernetes' resource labels
 license: Apache-2.0
 homeURL: https://github.com/kubewarden/safe-labels-policy
@@ -25,6 +25,10 @@ install: |
   The policy can be obtained using [`kwctl`](https://github.com/kubewarden/kwctl):
   ```console
   kwctl pull ghcr.io/kubewarden/policies/safe-labels:v0.1.14
+  ```
+  Then, generate the policy manifest and tune it to your liking. For example:
+  ```console
+  kwctl scaffold manifest -t ClusterAdmissionPolicy registry://ghcr.io/kubewarden/policies/safe-labels:v0.1.14
   ```
 maintainers:
 - name: Kubewarden developers
